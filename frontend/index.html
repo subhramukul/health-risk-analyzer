@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Disease Health Risk Analyzer — AI Powered</title>
+<style>
+  :root {
+    --teal: #1D9E75; --teal-light: #E1F5EE; --teal-dark: #0F6E56;
+    --red: #E24B4A; --red-light: #FCEBEB;
+    --amber: #EF9F27; --amber-light: #FAEEDA;
+    --green: #639922; --green-light: #EAF3DE;
+    --gray-100: #f8f9fa; --gray-200: #e9ecef; --gray-400: #888;
+    --gray-700: #444; --gray-900: #111;
+    --radius: 10px; --radius-lg: 14px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: var(--gray-900); min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #0F6E56 0%, #1D9E75 100%); color: #fff; padding: 2rem 1.5rem 3rem; text-align: center; }
+  .header h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; }
+  .header p { margin-top: 6px; font-size: 0.95rem; opacity: 0.85; }
+  .header-badges { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .hbadge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 99px; padding: 4px 12px; font-size: 12px; }
+
+  /* MAIN CARD */
+  .container { max-width: 780px; margin: -1.5rem auto 2rem; padding: 0 1rem; }
+  .card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--gray-200); overflow-x: auto; }
+  .tab { flex: 1; min-width: 120px; padding: 14px 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--gray-400); border-bottom: 2.5px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab:hover { color: var(--gray-700); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .tab:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .section { display: none; padding: 1.5rem; }
+  .section.active { display: block; }
+
+  /* FORM */
+  .form-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-400); margin: 1.2rem 0 0.8rem; }
+  .form-section-title:first-child { margin-top: 0; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 13px; color: var(--gray-700); font-weight: 500; }
+  .form-group input, .form-group select {
+    padding: 9px 12px; border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+    font-size: 14px; color: var(--gray-900); background: #fff; transition: border .2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--teal); }
+  .analyze-btn {
+    width: 100%; margin-top: 1.5rem; padding: 14px;
+    background: var(--teal); color: #fff; border: none;
+    border-radius: var(--radius); font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background .2s, transform .1s;
+  }
+  .analyze-btn:hover { background: var(--teal-dark); }
+  .analyze-btn:active { transform: scale(0.99); }
+  .analyze-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .disclaimer { font-size: 12px; color: var(--gray-400); margin-top: 12px; text-align: center; line-height: 1.5; }
+
+  /* SUMMARY BAR */
+  .summary-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .sum-card { background: var(--gray-100); border-radius: var(--radius); padding: 1rem; text-align: center; }
+  .sum-val { font-size: 1.6rem; font-weight: 700; color: var(--gray-900); }
+  .sum-lbl { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  /* DISEASE CARDS */
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .disease-card { border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; position: relative; overflow: hidden; }
+  .disease-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+  .disease-card.high::before { background: var(--red); }
+  .disease-card.medium::before { background: var(--amber); }
+  .disease-card.low::before { background: var(--teal); }
+  .d-name { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
+  .d-pct { font-size: 2rem; font-weight: 700; line-height: 1; }
+  .d-pct.high { color: var(--red); }
+  .d-pct.medium { color: var(--amber); }
+  .d-pct.low { color: var(--teal); }
+  .d-bar-wrap { height: 5px; background: var(--gray-200); border-radius: 99px; margin: 8px 0; }
+  .d-bar { height: 5px; border-radius: 99px; transition: width 1s ease; }
+  .d-bar.high { background: var(--red); }
+  .d-bar.medium { background: var(--amber); }
+  .d-bar.low { background: var(--teal); }
+  .d-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .d-badge.high { background: var(--red-light); color: #8B1A1A; }
+  .d-badge.medium { background: var(--amber-light); color: #7A4F00; }
+  .d-badge.low { background: var(--teal-light); color: var(--teal-dark); }
+
+  /* SHAP */
+  .shap-block { background: var(--gray-100); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .shap-block h3 { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; }
+  .shap-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .shap-label { font-size: 12px; color: var(--gray-400); width: 130px; flex-shrink: 0; text-transform: capitalize; }
+  .shap-bar-wrap { flex: 1; height: 7px; background: #e0e0e0; border-radius: 99px; }
+  .shap-bar { height: 7px; border-radius: 99px; background: var(--teal); min-width: 3px; }
+  .shap-pct { font-size: 12px; color: var(--gray-400); width: 35px; text-align: right; }
+
+  /* RECOMMENDATIONS */
+  .rec-card { display: flex; gap: 14px; align-items: flex-start; border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .rec-icon { font-size: 1.5rem; flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--teal-light); border-radius: 50%; }
+  .rec-body h4 { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 3px; }
+  .rec-body p { font-size: 13px; color: var(--gray-400); line-height: 1.55; }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 3rem 1rem; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-200); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-box { background: var(--red-light); border: 1px solid #f5c1c1; border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: #8B1A1A; margin-bottom: 1rem; }
+
+  .edit-btn { width: 100%; padding: 11px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 14px; background: #fff; color: var(--gray-700); cursor: pointer; margin-top: 0.5rem; font-weight: 500; }
+  .edit-btn:hover { background: var(--gray-100); }
+
+  @media (max-width: 520px) {
+    .form-grid, .results-grid, .summary-bar { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏥 Multi-Disease Health Risk Analyzer</h1>
+  <p>AI-powered risk prediction for 4 conditions simultaneously</p>
+  <div class="header-badges">
+    <span class="hbadge">Gradient Boosting ML</span>
+    <span class="hbadge">SHAP Explainability</span>
+    <span class="hbadge">4 Disease Models</span>
+    <span class="hbadge">88%+ Accuracy</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('input')">📋 Patient Input</button>
+      <button class="tab" id="tab-results" onclick="switchTab('results')" disabled>📊 Risk Results</button>
+      <button class="tab" id="tab-explain" onclick="switchTab('explain')" disabled>🔍 Why These Scores?</button>
+      <button class="tab" id="tab-rec" onclick="switchTab('rec')" disabled>💡 Recommendations</button>
+    </div>
+
+    <!-- INPUT SECTION -->
+    <div class="section active" id="sec-input">
+      <div id="error-box" class="error-box" style="display:none"></div>
+
+      <div class="form-section-title">Basic Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Age (years)</label>
+          <input type="number" id="age" min="18" max="100" placeholder="e.g. 35">
+        </div>
+        <div class="form-group">
+          <label>Sex</label>
+          <select id="sex">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" id="weight" placeholder="e.g. 72">
+        </div>
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" id="height" placeholder="e.g. 170">
+        </div>
+      </div>
+
+      <div class="form-section-title">Vitals & Labs</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Blood Pressure — systolic (mmHg)</label>
+          <input type="number" id="bp" placeholder="e.g. 120">
+        </div>
+        <div class="form-group">
+          <label>Fasting Blood Glucose (mg/dL)</label>
+          <input type="number" id="glucose" placeholder="e.g. 95">
+        </div>
+        <div class="form-group">
+          <label>Total Cholesterol (mg/dL)</label>
+          <input type="number" id="cholesterol" placeholder="e.g. 180">
+        </div>
+        <div class="form-group">
+          <label>Resting Heart Rate (bpm)</label>
+          <input type="number" id="heartrate" placeholder="e.g. 72">
+        </div>
+      </div>
+
+      <div class="form-section-title">Lifestyle</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Smoking Status</label>
+          <select id="smoking">
+            <option value="">Select</option>
+            <option>Never</option>
+            <option>Former</option>
+            <option>Current</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Physical Activity Level</label>
+          <select id="activity">
+            <option value="">Select</option>
+            <option>Sedentary</option>
+            <option>Light</option>
+            <option>Moderate</option>
+            <option>Active</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Alcohol Intake</label>
+          <select id="alcohol">
+            <option value="">Select</option>
+            <option>None</option>
+            <option>Occasional</option>
+            <option>Regular</option>
+            <option>Heavy</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Family History of Disease</label>
+          <select id="family">
+            <option value="">Select</option>
+            <option>None</option>
+            <option>Heart disease</option>
+            <option>Diabetes</option>
+            <option>Both</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">🔬 Analyze My Health Risks</button>
+      <p class="disclaimer">⚠️ For educational purposes only. Not a substitute for professional medical advice.</p>
+    </div>
+
+    <!-- RESULTS SECTION -->
+    <div class="section" id="sec-results">
+      <div class="summary-bar" id="summaryBar"></div>
+      <div class="results-grid" id="resultsGrid"></div>
+      <button class="edit-btn" onclick="switchTab('input')">← Edit Inputs</button>
+    </div>
+
+    <!-- EXPLAIN SECTION -->
+    <div class="section" id="sec-explain">
+      <div id="shapContent"></div>
+    </div>
+
+    <!-- RECOMMENDATIONS SECTION -->
+    <div class="section" id="sec-rec">
+      <div id="recContent"></div>
+      <p class="disclaimer" style="margin-top:1rem">⚠️ These are AI-generated suggestions. Always consult a qualified doctor.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  const map = { input: 'sec-input', results: 'sec-results', explain: 'sec-explain', rec: 'sec-rec' };
+  const tabIdx = { input: 0, results: 1, explain: 2, rec: 3 };
+  document.getElementById(map[t]).classList.add('active');
+  document.querySelectorAll('.tab')[tabIdx[t]].classList.add('active');
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function getInputs() {
+  return {
+    age: document.getElementById('age').value,
+    sex: document.getElementById('sex').value,
+    weight: document.getElementById('weight').value,
+    height: document.getElementById('height').value,
+    bp: document.getElementById('bp').value,
+    glucose: document.getElementById('glucose').value,
+    cholesterol: document.getElementById('cholesterol').value,
+    heartrate: document.getElementById('heartrate').value,
+    smoking: document.getElementById('smoking').value,
+    activity: document.getElementById('activity').value,
+    alcohol: document.getElementById('alcohol').value,
+    family: document.getElementById('family').value
+  };
+}
+
+function validate(d) {
+  if (!d.age || d.age < 18 || d.age > 100) return 'Enter a valid age (18–100)';
+  if (!d.sex) return 'Please select sex';
+  if (!d.weight || d.weight < 30) return 'Enter a valid weight';
+  if (!d.height || d.height < 100) return 'Enter a valid height';
+  if (!d.bp || d.bp < 60) return 'Enter a valid blood pressure';
+  if (!d.glucose || d.glucose < 50) return 'Enter a valid blood glucose';
+  if (!d.cholesterol || d.cholesterol < 80) return 'Enter a valid cholesterol';
+  if (!d.heartrate || d.heartrate < 30) return 'Enter a valid heart rate';
+  if (!d.smoking) return 'Select smoking status';
+  if (!d.activity) return 'Select physical activity level';
+  if (!d.alcohol) return 'Select alcohol intake';
+  if (!d.family) return 'Select family history';
+  return null;
+}
+
+async function runAnalysis() {
+  const inputs = getInputs();
+  const err = validate(inputs);
+  if (err) { showError(err); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+
+  try {
+    const res = await fetch(`${API_BASE}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inputs)
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Prediction failed');
+    renderResults(data);
+    ['tab-results', 'tab-explain', 'tab-rec'].forEach(id => {
+      document.getElementById(id).disabled = false;
+    });
+    switchTab('results');
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔬 Analyze My Health Risks';
+  }
+}
+
+function renderResults(data) {
+  const { predictions, recommendations, summary } = data;
+
+  // Summary bar
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sum-card">
+      <div class="sum-val" style="color:${summary.high_count > 0 ? 'var(--red)' : 'var(--teal)'}">${summary.high_count}</div>
+      <div class="sum-lbl">High risk conditions</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-val">${summary.avg_risk}%</div>
+      <div class="sum-lbl">Average risk score</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-val">${summary.bmi}</div>
+      <div class="sum-lbl">Your BMI</div>
+    </div>
+  `;
+
+  // Disease cards
+  const icons = { diabetes: '🩸', heart: '❤️', liver: '🫁', kidney: '🫘' };
+  document.getElementById('resultsGrid').innerHTML = predictions.map(p => `
+    <div class="disease-card ${p.level}">
+      <div class="d-name">${icons[p.key] || '🔬'} ${p.disease}</div>
+      <div class="d-pct ${p.level}">${p.probability}%</div>
+      <div class="d-bar-wrap"><div class="d-bar ${p.level}" style="width:${p.probability}%"></div></div>
+      <span class="d-badge ${p.level}">${p.level.charAt(0).toUpperCase() + p.level.slice(1)} Risk</span>
+    </div>
+  `).join('');
+
+  // SHAP explanation
+  document.getElementById('shapContent').innerHTML = `
+    <p style="font-size:13px;color:var(--gray-400);margin-bottom:1rem;line-height:1.6">
+      Feature importance below shows which health factors contributed most to each prediction (SHAP-style analysis).
+    </p>
+    ${predictions.map(p => `
+      <div class="shap-block">
+        <h3>${icons[p.key] || ''} ${p.disease} — Top Risk Factors</h3>
+        ${p.top_factors.map(f => {
+          const maxImpact = Math.max(...p.top_factors.map(x => x.impact), 1);
+          const pct = Math.round(f.impact / maxImpact * 100);
+          return `<div class="shap-row">
+            <span class="shap-label">${f.feature.replace(/_/g, ' ')}</span>
+            <div class="shap-bar-wrap"><div class="shap-bar" style="width:${pct}%"></div></div>
+            <span class="shap-pct">${pct}%</span>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('')}
+  `;
+
+  // Recommendations
+  document.getElementById('recContent').innerHTML = recommendations.map(r => `
+    <div class="rec-card">
+      <div class="rec-icon">${r.icon}</div>
+      <div class="rec-body">
+        <h4>${r.title}</h4>
+        <p>${r.body}</p>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
