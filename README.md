@@ -1,5 +1,8 @@
 # 🏥 AI-Powered Multi-Disease Health Risk Analyzer
 
+## 🌐 Live Demo
+**[https://health-risk-analyzer-production.up.railway.app](https://health-risk-analyzer-production.up.railway.app)**
+
 > Simultaneously predicts risk for **Diabetes, Heart Disease, Liver Disease, and Kidney Failure** using Gradient Boosting ML models with SHAP-style explainability.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Flask](https://img.shields.io/badge/Flask-3.0-green) ![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.4-orange) ![Accuracy](https://img.shields.io/badge/Accuracy-88%25+-teal)
